@@ -1,0 +1,899 @@
+# cmsPrompt — ContactManagerApp Full-Stack Development Specification
+
+## 1. PROJECT OVERVIEW
+
+### Application Name
+ContactManagerApp
+
+### Objective
+Build a simple full-stack Contact Management application for managing Persons and Contacts.
+
+The application must support:
+- Person CRUD operations
+- Contact CRUD operations
+- Person-name search
+- Pagination
+- Sorting
+- Form validation
+- Excel file upload for bulk Person and Contact creation
+- Proper Person-to-Contact relationship management
+
+### Architecture Rules
+- Use a simple layered architecture.
+- Do not use microservices.
+- Do not implement authentication or authorization unless explicitly requested.
+- Do not over-engineer the application.
+- Keep controllers thin.
+- Keep business logic inside services.
+- Use repositories for persistence.
+- Use DTOs for API requests and responses.
+- Never expose JPA entities directly from controllers.
+- Use global exception handling.
+- Follow clean naming conventions and REST API best practices.
+
+# 2. FRONTEND DETAILS
+
+## 2.1 Frontend Technology Stack
+- React
+- TypeScript
+- Vite
+- React Router
+- Axios
+- React Hook Form
+- Zod
+- Tailwind CSS / Tailwind UI
+
+# 3. FRONTEND APPLICATION LAYOUT
+
+Use a left-side navigation layout.
+
+Application title:
+ContactManagerApp
+
+Side navigation:
+- Persons
+- Contacts
+
+When the user selects Persons, display the complete Persons management page.
+
+When the user selects Contacts, display the complete Contacts management page.
+
+# 4. PERSONS PAGE
+
+The Persons page must contain:
+- Page title: Persons
+- Search bar
+- Add Person button
+- Excel Upload icon/button
+- Persons table
+- Edit action
+- Delete action
+- Pagination footer
+
+## 4.1 Persons Search
+Provide a search bar that allows users to search persons by person name.
+
+## 4.2 Add Person
+Provide an Add Person button that navigates to the Person creation page.
+
+## 4.3 Excel Upload
+Provide an Excel upload icon/button on the Persons page.
+
+The upload control must:
+1. Allow the user to select an Excel file.
+2. Validate the file type.
+3. Call the Excel upload API.
+4. Display a loading state while uploading.
+5. Display a success message when the upload succeeds.
+6. Display a meaningful error message when the upload fails.
+7. Refresh Persons and Contacts after a successful upload.
+
+# 5. PERSONS TABLE
+
+Display the following columns:
+
+| First Name | Last Name | Email | Gender | Address | Action |
+|---|---|---|---|---|---|
+| Surendar | Reddy | surenda@gmail.com | MALE | Hyderabad | Edit, Delete |
+| Anith | Reddy | surenda@gmail.com | MALE | Hyderabad | Edit, Delete |
+| GSR | Rdyy | gsr@gmail.com | MALE | Hyd | Edit, Delete |
+
+Use icons for Edit and Delete.
+
+When Delete is clicked:
+1. Display a confirmation dialog.
+2. Inform the user that deleting a person will also delete associated contacts.
+3. Delete only after confirmation.
+4. Refresh the table after successful deletion.
+
+# 6. PERSON CREATE / EDIT PAGE
+
+Fields:
+- First Name
+- Last Name
+- Email
+- Address
+- Gender
+- Phone Number
+- Contact Type
+
+Contact Type dropdown:
+- PERSONAL
+- HOME
+- WORK
+- OTHER
+
+Use React Hook Form and Zod for client-side validation.
+
+# 7. CONTACTS PAGE
+
+The Contacts page must contain:
+- Page title: Contacts
+- Search bar
+- Add Contact button
+- Contacts table
+- Edit action
+- Delete action
+- Pagination footer
+
+# 8. CONTACTS TABLE
+
+| Person Name | Phone Number | Contact Type | Action |
+|---|---|---|---|
+| Surendar | 9618443676 | PERSONAL | Edit, Delete |
+| Surendar | 8888999 | WORK | Edit, Delete |
+
+Use icons for Edit and Delete.
+
+When Delete is clicked:
+1. Display a confirmation dialog.
+2. Delete only after confirmation.
+3. Refresh the table after successful deletion.
+
+# 9. CONTACT CREATE / EDIT PAGE
+
+Fields:
+- Person Name
+- Phone Number
+- Contact Type
+
+Person Name must be a dropdown populated from the Persons API.
+
+Contact Type dropdown:
+- PERSONAL
+- HOME
+- WORK
+- OTHER
+
+# 10. PAGINATION
+
+Display pagination controls in the footer of both tables.
+
+Example:
+Showing 6 of 20    <    >
+
+The pagination component must:
+- Display the number of visible records.
+- Display the total number of records.
+- Provide Previous and Next controls.
+- Disable Previous on the first page.
+- Disable Next on the last page.
+- Request the correct page from the backend.
+
+# 11. FRONTEND API LAYER
+
+Use Axios for HTTP communication.
+
+Do not make Axios requests directly inside page components.
+
+Create:
+src/api/
+- axiosClient.ts
+- personApi.ts
+- contactApi.ts
+
+Person API functions:
+- createPerson()
+- getPersons()
+- getPersonById()
+- updatePerson()
+- deletePerson()
+- uploadExcel()
+
+Contact API functions:
+- createContact()
+- getContacts()
+- getContactById()
+- updateContact()
+- deleteContact()
+
+# 12. FRONTEND VALIDATION
+
+Use React Hook Form + Zod.
+
+Person:
+- First Name required.
+- Last Name required.
+- Email required and valid.
+- Gender required.
+- Phone Number valid when provided.
+- Contact Type selected when a phone number is provided.
+
+Contact:
+- Person required.
+- Phone Number required.
+- Contact Type required.
+
+Display validation messages beside the relevant fields.
+
+# 13. FRONTEND UI STATES
+
+Provide appropriate states for:
+- Loading
+- Success
+- Validation error
+- API error
+- Empty data
+- Delete confirmation
+- Excel upload progress
+- Excel upload success
+- Excel upload failure
+
+Use Tailwind UI patterns for a clean and responsive interface.
+
+# 14. BACKEND DETAILS
+
+## 14.1 Backend Technology Stack
+- Java 17
+- Spring Boot 3.x
+- Spring Web
+- Spring Data JPA
+- Hibernate
+- Jakarta Bean Validation
+- Lombok
+- Maven
+- PostgreSQL
+
+## 14.2 Testing
+- JUnit 5
+- Mockito
+- Spring Boot Test
+
+Create representative sample test cases for major services and APIs.
+
+# 15. BACKEND ARCHITECTURE
+
+- No microservices.
+- No authentication unless explicitly requested.
+- No authorization unless explicitly requested.
+- No unnecessary abstractions.
+
+Layer flow:
+
+Controller
+    ↓
+Service
+    ↓
+Repository
+    ↓
+PostgreSQL
+
+Controller: receive requests, validate DTOs, call services, return responses.
+
+Service: business rules, data validation, transactions, relationship logic, Excel processing.
+
+Repository: database persistence and query operations.
+
+# 16. ENTITY DESIGN
+
+## Person
+Fields:
+- id
+- firstName
+- lastName
+- email
+- gender
+- address
+- contacts
+- createdDate
+- updatedDate
+
+Gender enum:
+- MALE
+- FEMALE
+- OTHER
+
+Relationship:
+Person 1 → Many Contacts
+
+## Contact
+Fields:
+- id
+- person
+- phoneNumber
+- contactType
+- createdDate
+- updatedDate
+
+ContactType enum:
+- PERSONAL
+- HOME
+- WORK
+- OTHER
+
+# 17. DTO RULE
+
+Never expose JPA entities directly from controllers.
+
+Create:
+- PersonCreateRequest
+- PersonUpdateRequest
+- PersonResponse
+- ContactCreateRequest
+- ContactUpdateRequest
+- ContactResponse
+
+# 18. EXCEPTION HANDLING
+
+Implement GlobalExceptionHandler using @RestControllerAdvice.
+
+Handle:
+- Resource not found
+- Duplicate email
+- Validation errors
+- Invalid request
+- Database constraint violations
+- Excel import errors
+- Unexpected application errors
+
+Return consistent, user-friendly error responses. Do not expose stack traces.
+
+# 19. VALIDATION
+
+Use Jakarta Bean Validation on request DTOs.
+
+Person:
+- firstName/lastName: @NotBlank, @Size(max = 100)
+- email: @NotBlank, @Email
+- gender: @NotNull
+
+Email uniqueness must be checked in the service layer, with the database UNIQUE constraint as the final safeguard.
+
+Contact:
+- phoneNumber: @NotBlank plus suitable regex/pattern validation
+- contactType: @NotNull
+
+Use @Valid on controller request DTO parameters.
+
+# 20. PERSON REST APIs
+
+POST /api/persons
+Create a person.
+
+GET /api/persons
+Support pagination, sorting, and search by person name.
+
+Example:
+GET /api/persons?page=0&size=6&sort=firstName,asc&search=Surendar
+
+GET /api/persons/{id}
+Get a person.
+
+PUT /api/persons/{id}
+Update a person.
+
+DELETE /api/persons/{id}
+Delete a person and associated contacts.
+
+# 21. CONTACT REST APIs
+
+POST /api/contacts
+
+Request:
+{
+  "personId": 1,
+  "phoneNumber": "9618443676",
+  "contactType": "PERSONAL"
+}
+
+GET /api/contacts
+Support pagination, sorting, and search by person name.
+
+Example:
+GET /api/contacts?page=0&size=6&sort=phoneNumber,asc&search=Surendar
+
+GET /api/contacts/{contactId}
+
+PUT /api/contacts/{contactId}
+
+DELETE /api/contacts/{contactId}
+
+# 22. EXCEL UPLOAD API
+
+Implement one additional API to upload an Excel file containing Person and Contact information.
+
+Endpoint:
+POST /api/persons/upload
+
+The API must accept the Excel file using multipart/form-data.
+
+Request parameter:
+file
+
+# 23. EXCEL FILE FORMAT
+
+The Excel file must contain:
+- FirstName
+- LastName
+- Email
+- Gender
+- Address
+- PhoneNumbers
+- ContactType
+
+Example:
+FirstName: Surendar
+LastName: Reddy
+Email: surenda@gmail.com
+Gender: MALE
+Address: Hyderabad
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME, PERSONAL
+
+The import must create one Person record and the appropriate Contact records.
+
+# 24. EXCEL PHONE NUMBER AND CONTACT TYPE MAPPING RULE
+
+If an Excel row contains:
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME, PERSONAL
+
+Process the comma-separated values individually.
+
+Rules:
+1. Split PhoneNumbers using a comma.
+2. Split ContactType using a comma.
+3. Trim leading and trailing whitespace.
+4. Create one Contact record for each phone number.
+5. Map phone numbers to contact types by position.
+6. First phone number → first contact type.
+7. Second phone number → second contact type.
+8. Continue positional mapping for all values.
+
+Mapping:
+PhoneNumber[0] → ContactType[0]
+PhoneNumber[1] → ContactType[1]
+PhoneNumber[2] → ContactType[2]
+
+# 25. EXCEL IMPORT EXAMPLE
+
+Input:
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME, PERSONAL
+
+Expected:
+| Person | Phone Number | Contact Type |
+|---|---|---|
+| Surendar Reddy | 9618443676 | HOME |
+| Surendar Reddy | 7893097820 | PERSONAL |
+
+Both contacts must reference the same Person.
+
+# 26. EXCEL VALIDATION RULE
+
+The number of phone numbers must exactly match the number of contact types.
+
+Valid:
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME, PERSONAL
+
+Invalid:
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME
+
+If the counts do not match, reject the Excel row with a clear validation error.
+
+Do not create incomplete or incorrectly mapped Contact records.
+
+# 27. EXCEL IMPORT TRANSACTION RULE
+
+The Excel import operation must be transactional.
+
+Flow:
+Upload Excel
+→ Read Excel
+→ Validate Excel structure
+→ Validate all rows
+→ Create Person records
+→ Create Contact records
+→ Commit transaction
+
+If processing fails, roll back the transaction.
+
+Do not leave incomplete Person or Contact data in the database.
+
+# 28. DATABASE CONFIGURATION
+
+Database: PostgreSQL
+
+Development connection:
+URL      = jdbc:postgresql://localhost:5432/contact_manager
+Username = postgres
+Password = postgres
+
+Do not hard-code credentials in production. Use environment variables or external configuration for production deployments.
+
+# 29. PERSONS DATABASE TABLE
+
+Table: persons
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | BIGSERIAL / UUID | PRIMARY KEY |
+| first_name | VARCHAR(100) | NOT NULL |
+| last_name | VARCHAR(100) | NOT NULL |
+| email | VARCHAR(255) | NOT NULL, UNIQUE |
+| gender | VARCHAR(20) | NOT NULL, CHECK IN (MALE, FEMALE, OTHER) |
+| address | VARCHAR(255) | NULL |
+| created_at | TIMESTAMP | NOT NULL DEFAULT now() |
+| updated_at | TIMESTAMP | NOT NULL DEFAULT now() |
+
+# 30. CONTACTS DATABASE TABLE
+
+Table: contacts
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | BIGSERIAL / UUID | PRIMARY KEY |
+| person_id | BIGINT / UUID | NOT NULL, FOREIGN KEY → persons.id |
+| phone_number | VARCHAR(20) | NOT NULL |
+| contact_type | VARCHAR(20) | NOT NULL, CHECK IN (PERSONAL, HOME, WORK, OTHER) |
+| created_at | TIMESTAMP | NOT NULL DEFAULT now() |
+| updated_at | TIMESTAMP | NOT NULL DEFAULT now() |
+
+Database ContactType values must match the backend enum values.
+
+# 31. DATABASE RELATIONSHIP AND DELETE RULE
+
+Relationship:
+persons.id → contacts.person_id
+
+One Person can have multiple Contacts.
+
+When a Person is deleted, all associated Contacts must be deleted automatically.
+
+Use:
+FOREIGN KEY (person_id)
+REFERENCES persons(id)
+ON DELETE CASCADE
+
+Configure the JPA relationship consistently with the database behavior.
+
+# 32. DATABASE INDEXES
+
+Create appropriate indexes for frequently queried columns.
+
+At minimum:
+- persons.first_name
+- persons.last_name
+- persons.email
+- contacts.person_id
+- contacts.phone_number
+- contacts.contact_type
+
+Do not create unnecessary indexes.
+
+# 33. TESTING REQUIREMENTS
+
+Use JUnit 5, Mockito, and Spring Boot Test.
+
+Person tests:
+- Create Person successfully.
+- Get Persons with pagination.
+- Search Persons by name.
+- Update Person.
+- Delete Person.
+- Duplicate email validation.
+- Person not found.
+
+Contact tests:
+- Create Contact successfully.
+- Get Contacts with pagination.
+- Search Contacts by person name.
+- Update Contact.
+- Delete Contact.
+- Contact not found.
+- Invalid phone number.
+
+Excel tests:
+1. Valid single-phone-number import.
+2. Valid multiple-phone-number import.
+3. Multiple phone numbers mapped to multiple contact types.
+4. Phone number/contact type count mismatch.
+5. Invalid email.
+6. Duplicate email.
+7. Invalid gender.
+8. Invalid contact type.
+9. Missing Excel column.
+10. Transaction rollback when import fails.
+
+# 34. IMPLEMENTATION ORDER
+
+## STEP 1 — DATABASE
+Create the PostgreSQL database, tables, constraints, relationships, indexes, and cascade-delete behavior.
+
+## STEP 2 — BACKEND SETUP
+Create and configure Spring Boot with PostgreSQL, JPA, validation, Lombok, and Maven.
+
+## STEP 3 — ENTITIES AND ENUMS
+Create Person, Contact, Gender, and ContactType. Configure the relationship.
+
+## STEP 4 — REPOSITORIES
+Create PersonRepository and ContactRepository. Implement pagination, sorting, search, and email-existence queries.
+
+## STEP 5 — DTOs
+Create request and response DTOs.
+
+## STEP 6 — SERVICES
+Implement PersonService, ContactService, and ExcelImportService.
+
+## STEP 7 — CONTROLLERS
+Implement PersonController and ContactController. Keep controllers thin.
+
+## STEP 8 — EXCEPTION HANDLING
+Implement GlobalExceptionHandler using @RestControllerAdvice.
+
+## STEP 9 — PERSON CRUD
+Implement and test all Person APIs.
+
+## STEP 10 — CONTACT CRUD
+Implement and test all Contact APIs.
+
+## STEP 11 — EXCEL IMPORT
+Implement POST /api/persons/upload with validation, positional mapping, and transaction handling.
+
+## STEP 12 — BACKEND TESTING
+Run unit and integration tests and fix all failures.
+
+## STEP 13 — FRONTEND SETUP
+Create the React + TypeScript + Vite application and install the required dependencies.
+
+## STEP 14 — FRONTEND LAYOUT
+Implement ContactManagerApp side navigation with Persons and Contacts.
+
+## STEP 15 — PERSONS UI
+Implement Persons table, search, pagination, Add Person, Edit, Delete confirmation, and Excel upload.
+
+## STEP 16 — CONTACTS UI
+Implement Contacts table, search, pagination, Add Contact, Edit, and Delete confirmation.
+
+## STEP 17 — FORM VALIDATION
+Implement React Hook Form + Zod validation.
+
+## STEP 18 — API INTEGRATION
+Integrate all frontend screens with backend REST APIs using Axios.
+
+## STEP 19 — FINAL TESTING
+Verify CRUD, search, sorting, pagination, validation, delete confirmation, Excel upload, multiple contacts, error handling, loading states, empty states, and responsive UI.
+
+# 35. FINAL DEVELOPMENT RULES
+
+Before implementing any feature:
+1. Inspect the existing project structure.
+2. Read existing project instructions.
+3. Reuse existing code where appropriate.
+4. Do not overwrite working code unnecessarily.
+5. Implement one feature at a time.
+6. Compile the backend after backend changes.
+7. Run backend tests after backend changes.
+8. Run frontend type checks/linting after frontend changes.
+9. Fix errors before moving to the next feature.
+10. Do not implement features outside this specification.
+
+The final application must be simple, clean, maintainable, testable, and suitable as a sample full-stack Contact Management application.
+
+# 36. FRONTEND RUN AND BUILD COMMANDS
+
+## 36.1 Install Frontend Dependencies
+
+From the frontend project directory:
+
+```bash
+cd frontend
+npm install
+```
+
+## 36.2 Run Frontend in Development Mode
+
+```bash
+npm run dev
+```
+
+The frontend should normally be available at:
+
+```text
+http://localhost:5173
+```
+
+Use the URL displayed by Vite if a different port is configured.
+
+## 36.3 Frontend Type Check
+
+If the project defines a TypeScript type-check script:
+
+```bash
+npm run typecheck
+```
+
+If `typecheck` is not configured, use the project's configured TypeScript validation command.
+
+## 36.4 Frontend Lint
+
+```bash
+npm run lint
+```
+
+Fix all lint errors before considering the frontend complete.
+
+## 36.5 Frontend Production Build
+
+```bash
+npm run build
+```
+
+The production build must complete successfully without TypeScript or compilation errors.
+
+## 36.6 Frontend Production Preview
+
+```bash
+npm run preview
+```
+
+## 36.7 Frontend Verification
+
+Run:
+
+```bash
+npm install
+npm run lint
+npm run typecheck
+npm run build
+```
+
+If `typecheck` is not configured, run the available project-specific TypeScript validation command instead.
+
+Do not consider the frontend complete until the production build succeeds.
+
+# 37. BACKEND RUN AND BUILD COMMANDS
+
+## 37.1 Navigate to Backend
+
+```bash
+cd backend
+```
+
+## 37.2 Run Backend in Development Mode
+
+Using Maven Wrapper on Windows:
+
+```bash
+mvnw.cmd spring-boot:run
+```
+
+Using Maven Wrapper on Linux/macOS:
+
+```bash
+./mvnw spring-boot:run
+```
+
+If Maven Wrapper is not available:
+
+```bash
+mvn spring-boot:run
+```
+
+## 37.3 Backend Compile
+
+```bash
+mvn clean compile
+```
+
+## 37.4 Backend Tests
+
+Run all tests:
+
+```bash
+mvn test
+```
+
+Run a clean test build:
+
+```bash
+mvn clean test
+```
+
+## 37.5 Backend Production Build
+
+Create the Spring Boot JAR:
+
+```bash
+mvn clean package
+```
+
+If tests have already been executed separately and a package without running tests is specifically required:
+
+```bash
+mvn clean package -DskipTests
+```
+
+Do not use `-DskipTests` instead of running the required test suite.
+
+## 37.6 Run the Built JAR
+
+After a successful package:
+
+```bash
+java -jar target/<application-name>.jar
+```
+
+Use the actual JAR filename generated in the `target` directory.
+
+## 37.7 Backend Verification
+
+Run:
+
+```bash
+mvn clean test
+mvn clean package
+```
+
+The backend must compile successfully, all tests must pass, and the production JAR must be generated successfully.
+
+# 38. FULL-STACK BUILD VERIFICATION
+
+Before considering ContactManagerApp complete, verify both applications.
+
+## Backend
+
+```bash
+cd backend
+mvn clean test
+mvn clean package
+```
+
+## Frontend
+
+```bash
+cd frontend
+npm install
+npm run lint
+npm run typecheck
+npm run build
+```
+
+If the frontend does not define `typecheck`, use the configured TypeScript validation command.
+
+## Final Verification Checklist
+
+Confirm that:
+
+1. PostgreSQL is running.
+2. The `contact_manager` database is accessible.
+3. The backend starts successfully.
+4. Backend APIs are accessible.
+5. The frontend starts successfully.
+6. The frontend communicates with the backend API.
+7. Person CRUD works.
+8. Contact CRUD works.
+9. Search works.
+10. Pagination works.
+11. Sorting works.
+12. Excel upload works.
+13. Excel phone-number/contact-type positional mapping works.
+14. Delete confirmation works.
+15. Deleting a Person removes associated Contacts.
+16. Backend tests pass.
+17. Frontend production build succeeds.
+18. Backend production package succeeds.
+
+Do not mark the project as complete if either the frontend build or backend build fails.
