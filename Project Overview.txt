@@ -1,0 +1,478 @@
+# Project Overview
+A simple full-stack Contact Management application for managing Persons and their Contacts (phone numbers), with search, pagination, sorting, form validation, and bulk creation through Excel upload.
+
+# Database Details
+Database: PostgreSQL
+properties
+url=jdbc:postgresql://localhost:5432/contact_manager
+username=postgres
+password=postgres
+
+## Database Tables
+persons
+contacts
+
+### Persons Table Details
+ Column      Type           Constraints                                    
+ id          BIGSERIAL     PRIMARY KEY                                    
+ first_name  VARCHAR(100)  NOT NULL                                       
+ last_name   VARCHAR(100)  NOT NULL                                       
+ email       VARCHAR(255)  NOT NULL, UNIQUE                               
+ gender      VARCHAR(20)   NOT NULL, CHECK IN (MALE, FEMALE, OTHER) 
+ address     VARCHAR(255)  NOT NULL                                       
+ created_at  TIMESTAMP     NOT NULL, DEFAULT now()                        
+ updated_at  TIMESTAMP     NOT NULL, DEFAULT now()                        
+
+### Contacts Table Details
+ Column        Type         Constraints                                               
+ id            BIGSERIAL    PRIMARY KEY                                               
+ person_id     BIGINT       NOT NULL, FOREIGN KEY REFERENCES persons(id)              
+ phone_number  VARCHAR(20)  NOT NULL                                                  
+ contact_type  VARCHAR(20)  NOT NULL, CHECK IN (MOBILE, HOME, WORK, PERSONAL) 
+ created_at    TIMESTAMP    NOT NULL, DEFAULT now()                                   
+ updated_at    TIMESTAMP    NOT NULL, DEFAULT now()                                   
+-----------------------------------------------------------------------------------------------------------------------
+
+# Backend Details
+## Tech Stack
+ Java 17
+ Spring Boot 3.x
+ Spring Web
+ Spring Data JPA
+ Hibernate
+ Jakarta Bean Validation
+ Lombok
+ Maven
+ PostgreSQL
+
+## Testing
+ JUnit 5
+ Mockito
+ Spring Boot Test
+ Sample unit and integration test cases
+
+## Architecture Rules
+ This is a single Spring Boot application.
+ No microservices.
+ No authentication or authorization unless explicitly requested.
+ Do not over-engineer the application.
+ Follow a clean layered architecture.
+
+### Layer Flow
+Controller (thin)
+        ↓
+Service (business logic and validation)
+        ↓
+Repository (persistence)
+        ↓
+PostgreSQL
+
+### DTO Rules
+ Use DTOs for all API request and response models.
+ Never expose JPA entities directly from controllers.
+ Request DTOs must contain validation annotations.
+ Response DTOs should contain only the required response fields.
+
+# Entities
+## Person
+Fields:
+ id
+ firstName
+ lastName
+ email
+ gender
+ address
+ contacts
+ createdDate
+ updatedDate
+
+ gender must be an enum: MALE, FEMALE, OTHER
+
+A Person can have multiple Contacts.
+
+## Contact
+Fields:
+ id
+ person
+ phoneNumber
+ contactType
+ createdDate
+ updatedDate
+
+contactType must be an enum: MOBILE,HOME, WORK, PERSONAL
+
+# Exception Handling
+Implement a centralized GlobalExceptionHandler using @RestControllerAdvice.
+Handle common exceptions such as:
+ Resource not found
+ Validation errors
+ Duplicate email
+ Invalid Excel data
+ Invalid phone number
+ Invalid contact type
+ Phone number and contact type count mismatch
+ Database constraint violations
+ Invalid request parameters
+ Invalid file format
+
+Return a consistent error response containing appropriate information such as:
+ timestamp
+ HTTP status
+ error code/type
+ message
+ validation details when applicable
+
+Create appropriate custom exceptions for Person and Contact operations, for example:
+ PersonNotFoundException
+ ContactNotFoundException
+ DuplicateEmailException
+ ExcelValidationException
+
+# Validation
+
+Use Jakarta Bean Validation on request DTOs.
+
+## Person Validation
+
+### firstName
+ @NotBlank, @Size(max = 100)
+
+### lastName
+ @NotBlank, @Size(max = 100)
+
+### email
+ @NotBlank,@Email
+ Maximum length: 255
+ Email uniqueness must be checked in the service layer.
+ The database UNIQUE constraint must act as the final safeguard.
+
+### gender
+ @NotNull
+### address
+ @NotBlank
+ Appropriate maximum length validation
+
+## Contact Validation
+### phoneNumber
+ @NotBlank
+ Validate the phone number using a suitable regex/pattern validator.
+ Validate both format and maximum length.
+
+### contactType
+ @NotNull
+
+The controller methods must use @Valid on request body parameters.
+# REST API Surface
+
+## Person APIs
+
+### Create Person
+
+http POST /api/persons
+Request body:firstName,lastName,email,gender,address
+
+### Get Persons
+http GET /api/persons Supports: Pagination, Sorting , Search by person name
+Example search parameter: personName=Surendar
+Default page size: 20
+
+### Get Person by ID
+http GET /api/persons/{id}
+
+### Update Person
+http PUT /api/persons/{id}
+
+### Delete Person
+http DELETE /api/persons/{id}
+
+The frontend must display a confirmation dialog before deleting a Person.
+
+# Excel Upload API
+
+Implement one additional API to upload an Excel file containing Person and Contact information.
+http POST /api/persons/upload
+
+The API must accept a multipart Excel file.
+
+## Excel Columns
+The Excel file must contain the following columns:
+
+FirstName, LastName, Email, Gender, Address, PhoneNumbers,ContactType
+
+Example:
+
+ FirstName  LastName  Email                                            Gender  Address    PhoneNumbers            ContactType    
+ ---------  --------  -----------------------------------------------  ------  ---------  ----------------------  -------------- 
+ Surendar   Reddy     [surendar@gmail.com](mailto:surendar@gmail.com)  MALE    Hyderabad  9618443676, 7893097820  HOME, PERSONAL 
+
+
+# Excel Phone Number and Contact Type Mapping
+
+The Excel file must contain the following columns:
+PhoneNumbers, ContactType
+
+Both fields can contain multiple comma-separated values.
+
+## Example
+If an Excel row contains:
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME, PERSONAL
+
+The application must process the values individually.
+## Processing Rules
+
+1. Split the PhoneNumbers value using a comma (,).
+2. Split the ContactType value using a comma (,).
+3. Trim leading and trailing spaces from each value.
+4. Create a separate Contact record for each phone number.
+5. Map each phone number to the corresponding Contact Type based on its position.
+6. The first phone number must be mapped to the first Contact Type.
+7. The second phone number must be mapped to the second Contact Type.
+8. Continue the same positional mapping for all values.
+9. All Contacts created from the same Excel row must be associated with the same Person.
+
+## Expected Result
+
+For:
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME, PERSONAL
+
+
+Create two Contact records for the same Person:
+
+ Person          Phone Number  Contact Type 
+ --------------  ------------  ------------ 
+ Surendar Reddy  9618443676    HOME         
+ Surendar Reddy  7893097820    PERSONAL     
+
+
+# Excel Validation Rules
+
+The number of phone numbers must exactly match the number of contact types.
+
+### Valid Example
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME, PERSONAL
+There are:
+2 phone numbers
+2 contact types
+
+Therefore, the row is valid.
+### Invalid Example
+PhoneNumbers: 9618443676, 7893097820
+ContactType: HOME
+
+There are:
+2 phone numbers
+1 contact type
+
+Therefore, the row is invalid.
+The system must:
+
+ Reject the invalid Excel row.
+ Return a clear validation error.
+ Not create incomplete or incorrectly mapped Contact records.
+
+Excel processing should validate the complete row before persisting the corresponding Person and Contacts to avoid partial or inconsistent data.
+
+The upload API should also validate:
+ Required Excel columns
+ Empty required values
+ Email format
+ Gender values
+ Phone number format
+ Contact Type values
+ Duplicate email addresses
+ Phone number and Contact Type count mismatch
+ Invalid or unsupported Excel file format
+
+# Contact APIs
+## Create Contact
+http POST /api/contacts
+Request body:personId,phoneNumber,contactType
+
+## Get Contacts
+http GET /api/contacts Supports: Pagination, Sorting, Search by person name
+Default page size: 20
+
+## Get Contact by ID
+http GET /api/contacts/{contactId}
+
+## Update Contact
+http PUT /api/contacts/{contactId}
+
+## Delete Contact
+http DELETE /api/contacts/{contactId}
+
+The frontend must display a confirmation dialog before deleting a Contact.
+---------------------------------------------------------------------------------------------
+# Frontend Details
+
+## Tech Stack
+ React + TypeScript, Vite,React Router,Axios,React Hook Form,Zod,Tailwind CSS / Tailwind UI
+
+# Frontend Layout
+Use a side navigation layout.
+The application title should be:
+ContactManagerApp
+
+The side navigation must contain two main tabs:
+Persons
+Contacts
+
+When the user selects Persons, display the Persons management page.
+
+When the user selects Contacts, display the Contacts management page.
+
+# Pagination
+
+The default page size must be: 20
+
+Pagination controls should be displayed in the footer.
+
+Showing 6 of 20
+<  1  2  3  ...  >
+
+The UI should provide:
+ Current page, previous page,next page
+ Total records,Page size
+The frontend should request paginated data from the backend instead of loading all records at once.
+
+# Persons List View
+The Persons page must contain:
+ Search bar
+ Add Person button
+ Excel upload icon/button
+ Person table
+ Pagination
+ Edit action
+ Delete action
+
+The search functionality must search by person name.
+
+The table should display:
+
+ First Name  Last Name  Email                                            Gender  Address    Action       
+ ----------  ---------  -----------------------------------------------  ------  ---------  ------------ 
+ Surendar    Reddy      [surendar@gmail.com](mailto:surendar@gmail.com)  MALE    Hyderabad  Edit, Delete 
+ Anith       Reddy      [anith@gmail.com](mailto:anith@gmail.com)        MALE    Hyderabad  Edit, Delete 
+ GSR         Rdyy       [gsr@gmail.com](mailto:gsr@gmail.com)            MALE    Hyderabad  Edit, Delete 
+
+Use icons for Edit and Delete actions.
+
+When the user clicks Delete, display a confirmation dialog before deleting the record.
+
+The Excel upload button/icon must open a file-selection dialog and call:
+
+http POST /api/persons/upload
+using a multipart file upload.
+
+# Contacts List View
+
+The Contacts page must contain:
+ Search bar
+ Add Contact button
+ Contact table
+ Pagination
+ Edit action
+ Delete action
+
+The search functionality must search by Person Name.
+
+The table should display:
+
+ Person Name  Phone Number  Contact Type  Action       
+ -----------  ------------  ------------  ------------ 
+ Surendar     9618443676    PERSONAL      Edit, Delete 
+ Surendar     8888999       WORK          Edit, Delete 
+
+Use icons for Edit and Delete actions.
+
+When the user clicks Delete, display a confirmation dialog before deleting the record.
+
+# Person Create / Edit Page
+The Person form must contain the following fields:
+First Name
+Last Name
+Email
+Address
+Gender
+Phone Number
+Contact Type
+
+## Gender
+Gender must be a dropdown containing: MALE, FEMALE, OTHER
+
+## Contact Type
+
+Contact Type must be a dropdown containing: MOBILE, HOME, WORK,PERSONAL
+The form must use:
+ React Hook Form
+ Zod validation
+Validation errors must be displayed clearly next to the corresponding fields.
+
+# Contact Create / Edit Page
+
+The Contact form must contain:
+Person Name
+Phone Number
+Contact Type
+
+## Person Name
+
+Person Name must be a dropdown containing the available Persons.
+
+The dropdown should load Person data from the backend.
+
+## Contact Type
+
+Contact Type must be a dropdown containing:
+MOBILE
+HOME
+WORK
+PERSONAL
+
+The form must use:
+ React Hook Form
+ Zod validation
+
+Validation errors must be displayed clearly next to the corresponding fields.
+
+# General Frontend Rules
+
+ Use React functional components.
+ Use TypeScript throughout the frontend.
+ Use React Router for navigation.
+ Use Axios for backend API communication.
+ Use React Hook Form and Zod for form handling and validation.
+ Keep API calls in a dedicated service/API layer.
+ Do not put API calls directly inside reusable UI components where avoidable.
+ Use reusable components for tables, pagination, dialogs, forms, buttons, and validation messages.
+ Display loading indicators while API requests are in progress.
+ Display user-friendly error messages when API requests fail.
+ Display success messages after successful create, update, delete, and Excel upload operations.
+ Use confirmation dialogs for delete operations.
+ Keep the UI simple, clean, and responsive.
+ Do not introduce unnecessary libraries or over-engineered architecture.
+
+# Application Goal
+
+The final application should provide a simple and clean full-stack Contact Management solution where users can:
+
+1. Create Persons.
+2. View Persons.
+3. Search Persons by name.
+4. Sort and paginate Persons.
+5. Edit Persons.
+6. Delete Persons.
+7. Create Contacts for Persons.
+8. View Contacts.
+9. Search Contacts by Person Name.
+10. Sort and paginate Contacts.
+11. Edit Contacts.
+12. Delete Contacts.
+13. Upload Persons and multiple Contacts through an Excel file.
+14. Validate Excel data before creating records.
+15. Correctly map multiple phone numbers to multiple Contact Types using positional mapping.
+16. Maintain a clean separation between Controller, Service, Repository, DTO, Entity, and Exception Handling layers.
+17. Provide a simple, maintainable, and production-style full-stack application without unnecessary complexity.
