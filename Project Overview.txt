@@ -1,7 +1,9 @@
 # Project Overview
+
 A simple full-stack Contact Management application for managing Persons and their Contacts (phone numbers), with search, pagination, sorting, form validation, and bulk creation through Excel upload.
 
 # Database Details
+
 Database: PostgreSQL
 properties
 url=jdbc:postgresql://localhost:5432/contact_manager
@@ -9,31 +11,34 @@ username=postgres
 password=postgres
 
 ## Database Tables
+
 persons
 contacts
 
 ### Persons Table Details
- Column      Type           Constraints                                    
- id          BIGSERIAL     PRIMARY KEY                                    
- first_name  VARCHAR(100)  NOT NULL                                       
- last_name   VARCHAR(100)  NOT NULL                                       
- email       VARCHAR(255)  NOT NULL, UNIQUE                               
- gender      VARCHAR(20)   NOT NULL, CHECK IN (MALE, FEMALE, OTHER) 
- address     VARCHAR(255)  NOT NULL                                       
- created_at  TIMESTAMP     NOT NULL, DEFAULT now()                        
- updated_at  TIMESTAMP     NOT NULL, DEFAULT now()                        
+ Column       Type            Constraints                                    
+ id           BIGSERIAL       PRIMARY KEY                                    
+ first_name   VARCHAR(100)    NOT NULL                                       
+ last_name    VARCHAR(100)    NOT NULL                                       
+ email        VARCHAR(255)    NOT NULL, UNIQUE                               
+ gender       VARCHAR(20)     NOT NULL, CHECK IN (MALE, FEMALE, OTHER) 
+ address      VARCHAR(255)    NOT NULL                                       
+ createdDate  TIMESTAMP       NOT NULL, DEFAULT now()                        
+ updatedDate  TIMESTAMP       NOT NULL, DEFAULT now()                        
 
 ### Contacts Table Details
- Column        Type         Constraints                                               
- id            BIGSERIAL    PRIMARY KEY                                               
- person_id     BIGINT       NOT NULL, FOREIGN KEY REFERENCES persons(id)              
- phone_number  VARCHAR(20)  NOT NULL                                                  
- contact_type  VARCHAR(20)  NOT NULL, CHECK IN (MOBILE, HOME, WORK, PERSONAL) 
- created_at    TIMESTAMP    NOT NULL, DEFAULT now()                                   
- updated_at    TIMESTAMP    NOT NULL, DEFAULT now()                                   
------------------------------------------------------------------------------------------------------------------------
+ Column         Type           Constraints                                               
+ id             BIGSERIAL      PRIMARY KEY                                               
+ person_id      BIGINT         NOT NULL, FOREIGN KEY REFERENCES persons(id)              
+ phone_number   VARCHAR(20)    NOT NULL                                                  
+ contact_type   VARCHAR(20)    NOT NULL, CHECK IN (MOBILE, HOME, WORK, PERSONAL) 
+ createdDate    TIMESTAMP      NOT NULL, DEFAULT now()                                   
+ updatedDate    TIMESTAMP      NOT NULL, DEFAULT now()             
+                      
+---------------------------------------------------------------------------------------------------------------------------
 
 # Backend Details
+
 ## Tech Stack
  Java 17
  Spring Boot 3.x
@@ -75,31 +80,16 @@ PostgreSQL
 
 # Entities
 ## Person
-Fields:
- id
- firstName
- lastName
- email
- gender
- address
- contacts
- createdDate
- updatedDate
-
- gender must be an enum: MALE, FEMALE, OTHER
+Fields: id, firstName, lastName, email, gender, address, contacts, createdDate, updatedDate
+ 
+gender must be an enum: (MALE, FEMALE, OTHER)
 
 A Person can have multiple Contacts.
 
 ## Contact
-Fields:
- id
- person
- phoneNumber
- contactType
- createdDate
- updatedDate
+Fields: id, person, phoneNumber, contactType, createdDate, updatedDate
 
-contactType must be an enum: MOBILE,HOME, WORK, PERSONAL
+contactType must be an enum: (MOBILE,HOME, WORK, PERSONAL)
 
 # Exception Handling
 Implement a centralized GlobalExceptionHandler using @RestControllerAdvice.
@@ -134,10 +124,7 @@ Use Jakarta Bean Validation on request DTOs.
 
 ## Person Validation
 
-### firstName
- @NotBlank, @Size(max = 100)
-
-### lastName
+### firstName, ### lastName
  @NotBlank, @Size(max = 100)
 
 ### email
@@ -146,8 +133,9 @@ Use Jakarta Bean Validation on request DTOs.
  Email uniqueness must be checked in the service layer.
  The database UNIQUE constraint must act as the final safeguard.
 
-### gender
+### gender, ### contactType
  @NotNull
+
 ### address
  @NotBlank
  Appropriate maximum length validation
@@ -158,12 +146,9 @@ Use Jakarta Bean Validation on request DTOs.
  Validate the phone number using a suitable regex/pattern validator.
  Validate both format and maximum length.
 
-### contactType
- @NotNull
-
 The controller methods must use @Valid on request body parameters.
-# REST API Surface
 
+# REST API Surface
 ## Person APIs
 
 ### Create Person
@@ -172,8 +157,8 @@ http POST /api/persons
 Request body:firstName,lastName,email,gender,address
 
 ### Get Persons
-http GET /api/persons Supports: Pagination, Sorting , Search by person name
-Example search parameter: personName=Surendar
+http GET /api/persons: Pagination, Search by person name
+Example search parameter: name=Surendar
 Default page size: 20
 
 ### Get Person by ID
@@ -197,7 +182,7 @@ The API must accept a multipart Excel file.
 ## Excel Columns
 The Excel file must contain the following columns:
 
-FirstName, LastName, Email, Gender, Address, PhoneNumbers,ContactType
+FirstName, LastName, Email, Gender, Address, PhoneNumbers, ContactType
 
 Example:
 
@@ -232,11 +217,8 @@ The application must process the values individually.
 9. All Contacts created from the same Excel row must be associated with the same Person.
 
 ## Expected Result
-
-For:
 PhoneNumbers: 9618443676, 7893097820
 ContactType: HOME, PERSONAL
-
 
 Create two Contact records for the same Person:
 
@@ -244,7 +226,6 @@ Create two Contact records for the same Person:
  --------------  ------------  ------------ 
  Surendar Reddy  9618443676    HOME         
  Surendar Reddy  7893097820    PERSONAL     
-
 
 # Excel Validation Rules
 
@@ -305,7 +286,8 @@ http PUT /api/contacts/{contactId}
 http DELETE /api/contacts/{contactId}
 
 The frontend must display a confirmation dialog before deleting a Contact.
----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+
 # Frontend Details
 
 ## Tech Stack
@@ -352,11 +334,11 @@ The search functionality must search by person name.
 
 The table should display:
 
- First Name  Last Name  Email                                            Gender  Address    Action       
- ----------  ---------  -----------------------------------------------  ------  ---------  ------------ 
- Surendar    Reddy      [surendar@gmail.com](mailto:surendar@gmail.com)  MALE    Hyderabad  Edit, Delete 
- Anith       Reddy      [anith@gmail.com](mailto:anith@gmail.com)        MALE    Hyderabad  Edit, Delete 
- GSR         Rdyy       [gsr@gmail.com](mailto:gsr@gmail.com)            MALE    Hyderabad  Edit, Delete 
+ First Name  Last Name  Email                  Gender  Address    Action       
+ ----------  ---------  ------------------     ------  ---------  ---------
+ Surendar    Reddy      surendar@gmail.com     MALE    Hyderabad  Edit, Delete 
+ Anith       Reddy      anith@gmail.com        MALE    Hyderabad  Edit, Delete 
+ GSR         Rdyy       gsr@gmail.com          MALE    Hyderabad  Edit, Delete 
 
 Use icons for Edit and Delete actions.
 
@@ -392,20 +374,14 @@ When the user clicks Delete, display a confirmation dialog before deleting the r
 
 # Person Create / Edit Page
 The Person form must contain the following fields:
-First Name
-Last Name
-Email
-Address
-Gender
-Phone Number
-Contact Type
+First Name, Last Name, Email, Address, Gender, Phone Number, Contact Type
 
 ## Gender
-Gender must be a dropdown containing: MALE, FEMALE, OTHER
+Gender must be a dropdown containing: (MALE, FEMALE, OTHER)
 
 ## Contact Type
 
-Contact Type must be a dropdown containing: MOBILE, HOME, WORK,PERSONAL
+Contact Type must be a dropdown containing: (MOBILE, HOME, WORK,PERSONAL)
 The form must use:
  React Hook Form
  Zod validation
@@ -414,9 +390,7 @@ Validation errors must be displayed clearly next to the corresponding fields.
 # Contact Create / Edit Page
 
 The Contact form must contain:
-Person Name
-Phone Number
-Contact Type
+Person Name, Phone Number, Contact Type
 
 ## Person Name
 
@@ -427,10 +401,7 @@ The dropdown should load Person data from the backend.
 ## Contact Type
 
 Contact Type must be a dropdown containing:
-MOBILE
-HOME
-WORK
-PERSONAL
+MOBILE, HOME, WORK, PERSONAL
 
 The form must use:
  React Hook Form
