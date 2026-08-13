@@ -13,6 +13,9 @@ frontend/dev.log
 .idea/
 *.iml
 
+# Claude Code personal settings
+.claude/settings.local.json
+
 # OS
 .DS_Store
 Thumbs.db
