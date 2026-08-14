@@ -66,6 +66,24 @@ tables on success.
   Phone Number valid when provided; Contact Type required when a phone number is provided.
 - Contact: Person required; Phone Number required; Contact Type required.
 
+## Established conventions (undocumented in spec)
+
+These aren't in `cmsPrompt.txt` but are real, followed consistently in the codebase — treat them
+as rules, not just observations.
+
+- Lint tool is `oxlint` (config: `.oxlintrc.json`), not ESLint — don't assume ESLint conventions
+  or config file locations apply.
+- Default page size is 6 (`PAGE_SIZE = 6` in `PersonsPage.tsx`/`ContactsPage.tsx`). The spec's
+  `size=6` is only an example value in a URL, not a stated default — 6 is the actual rule to
+  preserve.
+- Search input is debounced 300ms before firing the API call.
+- After delete/create redirects, success/warning banners are passed via React Router
+  `location.state` and shown post-navigation — reuse this pattern for any new redirect+message
+  flow rather than inventing a new one.
+- Accepted Excel upload extensions: `.xlsx`, `.xls` (mirrors the backend-side check).
+- The phone-number validation regex must match the backend's exactly:
+  `^[0-9+()\-\s]{7,20}$` (see `contact-manager-backend`).
+
 ## Run / build commands
 
 ```bash
@@ -79,6 +97,7 @@ npm run preview           # preview the production build
 ```
 
 **Frontend verification** (must all succeed before calling the frontend done):
+
 ```bash
 npm install
 npm run lint

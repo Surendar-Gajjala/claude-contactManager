@@ -25,7 +25,7 @@ Never hard-code these for production — use environment variables / external co
 2. Create the `persons` table (columns below), with `email` UNIQUE and `gender` constrained to
    the enum values.
 3. Create the `contacts` table (columns below), with `person_id` as a `FOREIGN KEY … REFERENCES
-   persons(id) ON DELETE CASCADE` and `contact_type` constrained to the enum values.
+persons(id) ON DELETE CASCADE` and `contact_type` constrained to the enum values.
 4. Add indexes (list below) — no others; don't index speculatively.
 5. Verify: insert a person + two contacts, delete the person, confirm both contacts are gone
    automatically (cascade, not application-level cleanup).
@@ -34,27 +34,27 @@ Never hard-code these for production — use environment variables / external co
 
 **persons**
 
-| Column | Type | Constraints |
-|---|---|---|
-| id | BIGSERIAL / UUID | PRIMARY KEY |
-| first_name | VARCHAR(100) | NOT NULL |
-| last_name | VARCHAR(100) | NOT NULL |
-| email | VARCHAR(255) | NOT NULL, UNIQUE |
-| gender | VARCHAR(20) | NOT NULL, CHECK IN (MALE, FEMALE, OTHER) |
-| address | VARCHAR(255) | NULL |
-| created_at | TIMESTAMP | NOT NULL DEFAULT now() |
-| updated_at | TIMESTAMP | NOT NULL DEFAULT now() |
+| Column     | Type             | Constraints                              |
+| ---------- | ---------------- | ---------------------------------------- |
+| id         | BIGSERIAL / UUID | PRIMARY KEY                              |
+| first_name | VARCHAR(100)     | NOT NULL                                 |
+| last_name  | VARCHAR(100)     | NOT NULL                                 |
+| email      | VARCHAR(255)     | NOT NULL, UNIQUE                         |
+| gender     | VARCHAR(20)      | NOT NULL, CHECK IN (MALE, FEMALE, OTHER) |
+| address    | VARCHAR(255)     | NULL                                     |
+| created_at | TIMESTAMP        | NOT NULL DEFAULT now()                   |
+| updated_at | TIMESTAMP        | NOT NULL DEFAULT now()                   |
 
 **contacts**
 
-| Column | Type | Constraints |
-|---|---|---|
-| id | BIGSERIAL / UUID | PRIMARY KEY |
-| person_id | BIGINT / UUID | NOT NULL, FOREIGN KEY → persons.id, ON DELETE CASCADE |
-| phone_number | VARCHAR(20) | NOT NULL |
-| contact_type | VARCHAR(20) | NOT NULL, CHECK IN (PERSONAL, HOME, WORK, OTHER) |
-| created_at | TIMESTAMP | NOT NULL DEFAULT now() |
-| updated_at | TIMESTAMP | NOT NULL DEFAULT now() |
+| Column       | Type             | Constraints                                           |
+| ------------ | ---------------- | ----------------------------------------------------- |
+| id           | BIGSERIAL / UUID | PRIMARY KEY                                           |
+| person_id    | BIGINT / UUID    | NOT NULL, FOREIGN KEY → persons.id, ON DELETE CASCADE |
+| phone_number | VARCHAR(20)      | NOT NULL                                              |
+| contact_type | VARCHAR(20)      | NOT NULL, CHECK IN (PERSONAL, HOME, WORK, OTHER)      |
+| created_at   | TIMESTAMP        | NOT NULL DEFAULT now()                                |
+| updated_at   | TIMESTAMP        | NOT NULL DEFAULT now()                                |
 
 `contact_type` values must match the backend `ContactType` enum exactly.
 
@@ -70,8 +70,16 @@ Never hard-code these for production — use environment variables / external co
 ## Verification
 
 Before considering the database step done, confirm:
+
 - PostgreSQL is running and `contact_manager` is accessible.
 - Both tables, their constraints, and the FK cascade exist as specified.
-- The JPA `@OneToMany`/`@ManyToOne` mapping on the entities (built in the backend skill) is
-  configured consistent with `ON DELETE CASCADE` — don't let the DB and JPA delete behavior
-  diverge.
+- The JPA `@OneToMany`/`@ManyToOne` mapping on the entities (built in the backend skill) doesn't
+  fight the DB's `ON DELETE CASCADE` — see the established convention below for the exact split.
+
+## Established convention (undocumented in spec)
+
+Cascade delete is implemented at the DB level only. The JPA `@OneToMany` on `Person`
+deliberately has no `cascade`/`orphanRemoval` attribute — deletion relies solely on the FK's
+`ON DELETE CASCADE`, not JPA-level cascading. This is a real decision, not an omission: don't
+"fix" it by adding JPA cascade, since that would make both layers try to handle the same delete
+(see `contact-manager-backend`).

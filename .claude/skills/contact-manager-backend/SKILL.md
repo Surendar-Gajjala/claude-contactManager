@@ -27,7 +27,7 @@ frontend; this one covers Steps 2–12 of the build order and the backend run/te
    Validation, Lombok, Maven, PostgreSQL driver.
 2. **Entities/enums** — `Person`, `Contact`, `Gender`, `ContactType` (see reference below);
    configure the `Person 1—Many Contact` relationship consistent with the DB's `ON DELETE
-   CASCADE` (see `contact-manager-db` skill).
+CASCADE` (see `contact-manager-db` skill).
 3. **Repositories** — `PersonRepository`, `ContactRepository` with pagination, sorting, name
    search, and an email-existence query.
 4. **DTOs** — `PersonCreateRequest`, `PersonUpdateRequest`, `PersonResponse`,
@@ -61,17 +61,17 @@ createdDate, updatedDate.
 
 ## REST API reference
 
-| Method | Path | Notes |
-|---|---|---|
-| POST | `/api/persons` | Create |
-| GET | `/api/persons?page=0&size=6&sort=firstName,asc&search=Surendar` | Paginated/sortable/searchable by name |
-| GET | `/api/persons/{id}` | Get one |
-| PUT | `/api/persons/{id}` | Update |
-| DELETE | `/api/persons/{id}` | Delete (cascades to contacts) |
-| POST | `/api/contacts` | Body: `{ "personId": 1, "phoneNumber": "9618443676", "contactType": "PERSONAL" }` |
-| GET | `/api/contacts?page=0&size=6&sort=phoneNumber,asc&search=Surendar` | Paginated/sortable/searchable by person name |
-| GET/PUT/DELETE | `/api/contacts/{contactId}` | Get/update/delete one |
-| POST | `/api/persons/upload` | multipart `file` — Excel bulk import |
+| Method         | Path                                                               | Notes                                                                             |
+| -------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| POST           | `/api/persons`                                                     | Create                                                                            |
+| GET            | `/api/persons?page=0&size=6&sort=firstName,asc&search=Surendar`    | Paginated/sortable/searchable by name                                             |
+| GET            | `/api/persons/{id}`                                                | Get one                                                                           |
+| PUT            | `/api/persons/{id}`                                                | Update                                                                            |
+| DELETE         | `/api/persons/{id}`                                                | Delete (cascades to contacts)                                                     |
+| POST           | `/api/contacts`                                                    | Body: `{ "personId": 1, "phoneNumber": "9618443676", "contactType": "PERSONAL" }` |
+| GET            | `/api/contacts?page=0&size=6&sort=phoneNumber,asc&search=Surendar` | Paginated/sortable/searchable by person name                                      |
+| GET/PUT/DELETE | `/api/contacts/{contactId}`                                        | Get/update/delete one                                                             |
+| POST           | `/api/persons/upload`                                              | multipart `file` — Excel bulk import                                              |
 
 ## Excel import rules
 
@@ -89,6 +89,37 @@ Contact: create, paginate, search by person name, update, delete, not-found, inv
 Excel: single-phone import, multi-phone import, multi-phone→multi-type mapping, count mismatch,
 invalid email, duplicate email, invalid gender, invalid contact type, missing column, and
 transaction rollback on failure.
+
+## Established conventions (undocumented in spec)
+
+These aren't in `cmsPrompt.txt` but are real, followed consistently in the codebase — treat them
+as rules, not just observations.
+
+- Canonical phone-number regex: `^[0-9+()\-\s]{7,20}$`. This is the single source of truth —
+  keep the frontend's `personSchema.ts`/`contactSchema.ts` Zod patterns identical to it if it
+  ever changes (see `contact-manager-frontend`).
+- Email-uniqueness check is case-insensitive (`existsByEmailIgnoreCase`), not a plain equality
+  check.
+- Actual custom exception class names: `ResourceNotFoundException`, `DuplicateEmailException`,
+  `ExcelImportException`.
+- `ErrorResponse` shape: `timestamp`, `status`, `error`, `message`, `path`, `fieldErrors`,
+  `details` — only non-null fields are included.
+- `GlobalExceptionHandler` also handles `HttpMessageNotReadableException`,
+  `MethodArgumentTypeMismatchException`, `MissingServletRequestParameterException` (400 each),
+  and `DataIntegrityViolationException` (409), beyond the base categories listed above.
+- Response DTOs use a static factory convention, e.g. `PersonResponse.from(entity)`.
+- The `PageResponse` pagination envelope (`content`, `totalElements`, `first`, `last`, etc.) is a
+  contract with the frontend `Pagination` component — don't change its field names without
+  updating the frontend to match.
+- Excel import also: rejects duplicate emails _within the same file_ (separate from the DB
+  uniqueness check), silently skips fully-blank rows, and collects all row errors before
+  throwing once as `"Row {n}: msg1; msg2"` rather than failing on the first bad row.
+- Accepted Excel upload extensions: `.xlsx`, `.xls`.
+- Automated backend tests run against an in-memory H2 database, not real PostgreSQL —
+  Testcontainers is not used.
+- Cascade delete is implemented at the DB level only (`ON DELETE CASCADE`); the JPA `@OneToMany`
+  on `Person` deliberately has no `cascade`/`orphanRemoval` attribute, to avoid the DB and JPA
+  both trying to handle the delete (see `contact-manager-db`).
 
 ## Run / build / test commands
 
@@ -108,6 +139,7 @@ java -jar target/<app-name>.jar # run the built JAR
 ```
 
 **Backend verification** (must both succeed before calling the backend done):
+
 ```bash
 mvn clean test
 mvn clean package

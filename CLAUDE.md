@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Greenfield — only planning artifacts exist right now: the spec (`cmsPrompt.txt`), this file,
-`README.md`, and the skill family under `.claude/skills/`. There is no `backend/` or `frontend/`
-source tree yet.
+Built and running — not greenfield. `backend/` (Spring Boot, layered under
+`src/main/java/com/contactmanager/{controller,service,repository,dto,entity,exception}`, with a
+full test suite) and `frontend/` (`src/{api,components,hooks,pages,schemas}`) both exist, are
+tested, and run locally (backend on :8080, frontend on :5173). The spec (`cmsPrompt.txt`), this
+file, `README.md`, and the skill family under `.claude/skills/` remain the source of truth for
+rules and conventions — including some established codebase conventions not written in the spec
+itself, documented in the relevant skill file (e.g. `contact-manager-backend`).
 
 ## Where to look first
 
@@ -41,11 +45,13 @@ Controller → Service → Repository → PostgreSQL
 ## Commands
 
 ### Database
+
 ```
 jdbc:postgresql://localhost:5432/contact_manager   (postgres / postgres, dev only)
 ```
 
 ### Backend (once scaffolded, run from `backend/`)
+
 ```bash
 mvnw.cmd spring-boot:run           # dev server (Windows); ./mvnw spring-boot:run on Linux/macOS
 mvn clean compile                   # compile
@@ -57,6 +63,7 @@ java -jar target/<app-name>.jar     # run the built JAR
 ```
 
 ### Frontend (once scaffolded, run from `frontend/`)
+
 ```bash
 npm install
 npm run dev           # http://localhost:5173 (or the port Vite reports)
@@ -66,10 +73,12 @@ npm run build          # production build — must succeed with no TS/compile er
 ```
 
 ### Definition of done
+
 ```bash
 cd backend  && mvn clean test && mvn clean package
 cd frontend && npm install && npm run lint && npm run typecheck && npm run build
 ```
+
 A failing frontend or backend build means the project is not complete, regardless of what else
 works.
 

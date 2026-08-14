@@ -46,6 +46,14 @@ jump ahead to frontend work while backend steps are incomplete, or vice versa.
 6. Fix all errors before moving to the next feature.
 7. Never implement anything outside `cmsPrompt.txt`.
 
+## Other established conventions (undocumented in spec)
+
+- An active `PostToolUse` hook (`.claude/settings.local.json`, personal/gitignored) auto-formats
+  saved files: `google-java-format` for `*.java`, `prettier` for
+  `*.ts/tsx/js/jsx/json/css/scss/md`. Don't hand-format against it or fight its output.
+- `db/fix_existing_schema.sql` is a one-off migration/patch script, not part of the initial
+  `schema.sql` build — a fresh setup doesn't need to run it.
+
 ## Final full-stack verification gate
 
 Do not call ContactManagerApp complete until **both** succeed:
